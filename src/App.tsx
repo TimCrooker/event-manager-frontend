@@ -1,26 +1,23 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { EventForm } from './components/EventForm';
+import  WebhookDisplay  from './components/WebhookDisplay'
 
-function App() {
+const App: React.FC = () => {
+  const handleSuccess = (event: any) => {
+    console.log('Event created:', event);
+  };
+
+  const handleError = (error: Error) => {
+    console.error('Error creating event:', error.message);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Create Event</h1>
+      <EventForm onSuccess={handleSuccess} onError={handleError} />
+			<WebhookDisplay />
     </div>
   );
-}
+};
 
 export default App;
