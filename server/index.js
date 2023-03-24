@@ -2,9 +2,14 @@ const express = require('express')
 const { createProxyMiddleware } = require('http-proxy-middleware')
 const { Server } = require('socket.io')
 const axios = require('axios')
+const cors = require('cors');
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+const OWNER_ID = 'test-owner-id-12345';
+
+const webhookUrl = `${process.env.REACT_APP_API_BASE_URL}/webhook`
 
 // Create an HTTP server for Socket.IO
 const server = require('http').createServer(app)
@@ -14,6 +19,8 @@ const io = new Server(server, {
 		methods: ['GET', 'POST'],
 	},
 })
+
+app.use(cors());
 
 // Forward requests from the client app to the event-manager server
 app.use(
@@ -26,6 +33,7 @@ app.use(
 
 // Set up a route to receive webhook notifications
 app.use(express.json())
+
 app.post('/webhook', (req, res) => {
 	console.log('Received webhook:', req.body)
 	// Forward the webhook data to connected clients using Socket.IO
@@ -37,16 +45,66 @@ app.post('/webhook', (req, res) => {
 	res.sendStatus(200)
 })
 
+// Add the POST endpoint to create a new subscription
+app.post('/webhook/subscriptions', async (req, res) => {
+  const { eventType } = req.body;
+
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_EVENT_MANAGER_BASE_URL}/event/webhook/subscribe`,
+      {
+        ownerId: OWNER_ID,
+        webhookUrl,
+        eventType,
+      }
+    );
+
+    console.log('Successfully created new webhook subscription:', response.data);
+    res.status(201).json(response.data);
+  } catch (error) {
+    console.error('Failed to create webhook subscription:', error.message);
+    res.status(500).json({ error: 'Failed to create webhook subscription' });
+  }
+});
+
+// get the events subscribed to by the owner
+app.get('/webhook/subscriptions', async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${process.env.REACT_APP_EVENT_MANAGER_BASE_URL}/event/webhook?ownerId=${OWNER_ID}`
+    );
+    const subscriptions = response.data.map((webhook) => webhook.eventType);
+    res.json(subscriptions);
+  } catch (error) {
+    console.error('Failed to fetch webhook subscriptions:', error.message);
+    res.status(500).json({ error: 'Failed to fetch webhook subscriptions' });
+  }
+});
+
+// Add the DELETE endpoint to remove a subscription
+app.delete('/webhook/subscriptions', async (req, res) => {
+  const { eventType } = req.query;
+
+  try {
+    await axios.delete(
+      `${process.env.REACT_APP_EVENT_MANAGER_BASE_URL}/event/webhook/subscribe?ownerId=${OWNER_ID}&eventType=${eventType}`
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Failed to remove webhook subscription:', error.message);
+    res.status(500).json({ error: 'Failed to remove webhook subscription' });
+  }
+});
+
 // Start the Socket.IO server
 async function subscribeToWebhook() {
 	try {
-		const webhookUrl = `${process.env.REACT_APP_API_BASE_URL}/webhook`
 		const eventType ='exampleEventType' // An array of event types to subscribe to
 
 		const response = await axios.post(
 			`${process.env.REACT_APP_EVENT_MANAGER_BASE_URL}/event/webhook/subscribe`,
 			{
-				ownerId: 'test-owner-id-12345',
+				ownerId: OWNER_ID,
 				webhookUrl,
 				eventType,
 			}

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { io, Socket } from "socket.io-client";
-import WebhookEvent, { WebhookData } from "./WebhookEvent"; // Import the WebhookEvent component
+import React, { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import WebhookEvent, { WebhookData } from './WebhookEvent';
+import { Grid, List, ListItem, Typography } from '@mui/material';
 
-const SOCKET_SERVER_URL = process.env.REACT_APP_API_BASE_URL || "";
+const SOCKET_SERVER_URL = process.env.REACT_APP_API_BASE_URL || '';
 
 const WebhookDisplay: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -12,9 +13,9 @@ const WebhookDisplay: React.FC = () => {
     const newSocket = io(SOCKET_SERVER_URL);
     setSocket(newSocket);
 
-    newSocket.on("webhook", (data: WebhookData) => {
-      console.log("Received webhook data:", data);
-      setWebhookDataList((prevWebhookDataList) => [...prevWebhookDataList, data]);
+    newSocket.on('webhook', (data: WebhookData) => {
+      console.log('Received webhook data:', data);
+      setWebhookDataList((prevWebhookDataList) => [data, ...prevWebhookDataList]);
     });
 
     return () => {
@@ -24,14 +25,16 @@ const WebhookDisplay: React.FC = () => {
 
   return (
     <div>
-      <h2>Webhook Data:</h2>
-      <ul>
-        {webhookDataList.map((webhookData, index) => (
-          <li key={index}>
-            <WebhookEvent webhookData={webhookData} /> {/* Render the WebhookEvent component for each item */}
-          </li>
+      <Typography variant="h6" component="h2" gutterBottom>
+        Webhook Data
+      </Typography>
+			<Grid container spacing={2}>
+        {webhookDataList.reverse().map((webhookData, index) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+            <WebhookEvent webhookData={webhookData} />
+          </Grid>
         ))}
-      </ul>
+      </Grid>
     </div>
   );
 };

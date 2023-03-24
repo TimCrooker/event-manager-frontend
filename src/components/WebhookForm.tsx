@@ -1,32 +1,33 @@
 import React, { useState } from 'react';
-import { createEvent } from '../api/eventManagerApi';
 import {
   TextField,
-  TextareaAutosize,
   Button,
   Grid,
   Paper,
   Typography,
-	Autocomplete,
 } from '@mui/material';
+import Autocomplete from '@mui/lab/Autocomplete';
+import { subscribeToWebhook } from '../api/webhookServerApi';
+import { useSubscribedEvents } from '../context/SubscribedEventsContext'
 
 interface Props {
   onSuccess: (event: any) => void;
   onError: (error: Error) => void;
 }
 
-export const EventForm: React.FC<Props> = ({ onSuccess, onError }) => {
-  const [eventName, setEventName] = useState('');
+export const WebhookForm: React.FC<Props> = ({ onSuccess, onError }) => {
   const [eventType, setEventType] = useState('');
-  const [eventPayload, setEventPayload] = useState('');
 
-	const eventTypes = ['exampleEventType'];
+	const { addEventType } = useSubscribedEvents()
+
+  const eventTypes = ['exampleEventType'];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const event = await createEvent(eventName, eventType, eventPayload);
-      onSuccess(event);
+      const webhook = await subscribeToWebhook(eventType);
+      onSuccess(webhook);
+			addEventType(eventType)
     } catch (error: any) {
       onError(error);
     }
@@ -35,20 +36,12 @@ export const EventForm: React.FC<Props> = ({ onSuccess, onError }) => {
   return (
     <Paper elevation={3} style={{ padding: '1rem', marginBottom: '2rem' }}>
       <Typography variant="h6" component="h2" gutterBottom>
-        Event Details
+        Webhook Subscription
       </Typography>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Event Name"
-              value={eventName}
-              onChange={(e) => setEventName(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-					<Autocomplete
+          <Grid item xs={12}>
+            <Autocomplete
               freeSolo
               options={eventTypes}
               value={eventType}
@@ -60,16 +53,8 @@ export const EventForm: React.FC<Props> = ({ onSuccess, onError }) => {
             />
           </Grid>
           <Grid item xs={12}>
-            <TextareaAutosize
-              style={{ width: '100%', minHeight: '5rem' }}
-              placeholder="Event Payload"
-              value={eventPayload}
-              onChange={(e) => setEventPayload(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12}>
             <Button variant="contained" color="primary" type="submit">
-              Create Event
+              Subscribe
             </Button>
           </Grid>
         </Grid>

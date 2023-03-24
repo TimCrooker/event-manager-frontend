@@ -1,3 +1,4 @@
+import { Card, CardContent, Typography } from "@mui/material"
 import React from "react";
 
 export interface WebhookData {
@@ -14,14 +15,27 @@ interface WebhookEventProps {
 
 const WebhookEvent: React.FC<WebhookEventProps> = ({ webhookData }) => {
   return (
-		<div>
-      <strong>ID:</strong> {webhookData.id}<br />
-      <strong>Name:</strong> {webhookData.name}<br />
-      <strong>Timestamp:</strong> {webhookData.timestamp}<br />
-      <strong>Event Type:</strong> {webhookData.eventType}<br />
-      <strong>Payload:</strong>
-      <pre>{JSON.stringify(webhookData.payload, null, 2)}</pre>
-    </div>
+    <Card>
+      <CardContent>
+        <Typography color="textSecondary" gutterBottom>
+          ID: {webhookData.id}
+        </Typography>
+        <Typography variant="h6" component="h3">
+          Name: {webhookData.name}
+        </Typography>
+        <Typography color="textSecondary">
+          Timestamp: {webhookData.timestamp}
+        </Typography>
+        <Typography color="textSecondary">
+          Event Type: {webhookData.eventType}
+        </Typography>
+        <Typography variant="body2" component="pre">
+          Payload:
+          <br />
+          {JSON.stringify(webhookData.payload, null, 2)}
+        </Typography>
+      </CardContent>
+    </Card>
   );
 };
 
